@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="Python 3.8 (dist-packages)" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.8 (cam_calib)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.8" project-jdk-type="Python SDK" />
 </project>

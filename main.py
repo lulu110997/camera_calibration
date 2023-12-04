@@ -1,3 +1,9 @@
+"""
+Obtain transforms from ZED to world or RS to world as well as base2gripper transforms
+
+Uses the ur_rtde interface
+"""
+
 import sys
 from rtde_receive import RTDEReceiveInterface as RTDEReceive
 import cv2
@@ -5,20 +11,41 @@ import cv2.aruco as aruco
 import pyzed.sl as sl
 import numpy as np
 import pyrealsense2 as rs
+import math
 
-TMP_BOOL = 1
-wp_num = 0
-CAMERA = "RS"
-
-SAVE_CAM2WORLD = False  # Save the homogenous transformation matrix
-PRINT_CAM2WORLD = 1  # Print values to check the rot and transl from cam2world
-VIEW_BOARD_ONCE = 1  # If you only wanna see the board once, mostly for when capturing the rot and transl elements
+PRINT_CAM2WORLD = False  # Print values to check the rot and transl from cam2world
+VIEW_BOARD_ONCE = False  # If you only want see the board once, mostly for when capturing the rot and transl elements
 SAVE_ROT_TRANSL = False  # Saves the individual rot and transl elements for camera calibration
+SAVE_TEST_POSE = False  # Saves a pose for testing the calibration values
+SAVE_ZED2WORLD = False  # The transform from the ZED camera to a point in the world (tgt) frame
 
-from datetime import datetime
-# now = datetime.now()
-# TODAY = f"{now.year}_{now.month}_{now.day}_{now.hour}_{now.minute}_{now.second}"
-# CAMERA = "ZED"
+if SAVE_ZED2WORLD:
+    from datetime import datetime
+    # now = datetime.now()
+    # TODAY = f"{now.year}_{now.month}_{now.day}_{now.hour}_{now.minute}_{now.second}"
+    # CAMERA = "ZED"
+else:
+    wp_num = 11
+    CAMERA = "RS"
+
+def tcp_pose_scal(pose):
+    """
+    from https://forum.universal-robots.com/t/state-actual-tcp-pose-results-in-wrong-pose/14498/9
+    :param pose: ee_pose
+    :return: scaled axis-angle orientation
+    """
+    v = pose
+    pi = 3.1416
+    l = math.sqrt(pow(v[3], 2) + pow(v[4], 2) + pow(v[5], 2))
+    scale = 1 - 2 * pi / l
+    if ((np.linalg.norm(v[3]) >= 0.001 and v[3] < 0.0) or (np.linalg.norm(v[3]) < 0.001 and np.linalg.norm(v[4]) >= 0.001 and v[4] < 0.0) or (
+            np.linalg.norm(v[3]) < 0.001 and np.linalg.norm(v[4]) < 0.001 and v[5] < 0.0)):
+        tcp_pose = [v[0], v[1], v[2], scale * v[3], scale * v[4], scale * v[5]]
+    else:
+        tcp_pose = v
+
+    return tcp_pose[3:]
+
 
 def save_base2ee():
     """
@@ -34,10 +61,14 @@ def save_base2ee():
     tvec = np.array(ee_pose[:3]).reshape(3, 1)
     r_matr = cv2.Rodrigues(rvec)[0]
 
-    # Save rotation matrix and translation vector
-    np.save(f"ee_transforms/BASE_TO_EE_{wp_num}_rot_mat", r_matr)
-    np.save(f"ee_transforms/BASE_TO_EE_{wp_num}_t_vec", tvec)
-
+    if SAVE_TEST_POSE:
+        return r_matr, tvec
+    else:
+        # Save rotation matrix and translation vector
+        np.save(f"ee_transforms/BASE_TO_EE_{wp_num}_rot_mat", r_matr)
+        np.save(f"ee_transforms/BASE_TO_EE_{wp_num}_t_vec", tvec)
+    # print([i*(180/3.14) for i in rtde_r.getActualQ()])
+    # print(tvec)
 
 def close_cam(cam):
     if CAMERA == "ZED":
@@ -195,8 +226,10 @@ def save_cam2world():
                         print("Transformation matrix below")
                         print(T_cam_target)
 
-                    if SAVE_CAM2WORLD:
-                        np.save("T_cam2world", T_cam_target)
+                    if SAVE_TEST_POSE:
+                        np.save("T_cam2world.npy", T_cam_target)
+                        T_base2gripper = create_T_matrix(*save_base2ee())
+                        np.save("T_base2gripper.npy", T_base2gripper)
 
                     if SAVE_ROT_TRANSL:
                         save_np_arr(R_cam_target, tvec)
