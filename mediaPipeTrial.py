@@ -1,5 +1,5 @@
 import time
-
+from mp_viz import draw_landmarks_on_image
 import cv2
 import mediapipe as mp
 from mediapipe.tasks import python
@@ -7,6 +7,10 @@ from mediapipe.tasks.python import vision
 import numpy as np
 import pyrealsense2 as rs
 import rospy
+from threading import Thread, Lock
+
+image_dict = {"img": None, "lock": Lock()}
+
 rospy.init_node("random")
 
 
@@ -53,28 +57,40 @@ HandLandmarkerOptions = mp.tasks.vision.HandLandmarkerOptions
 HandLandmarkerResult = mp.tasks.vision.HandLandmarkerResult
 VisionRunningMode = mp.tasks.vision.RunningMode
 
-
 # Create a hand landmarker instance with the live stream mode:
 def print_result(result: HandLandmarkerResult, output_image: mp.Image, timestamp_ms: int):
-    print('hand landmarker result: {}'.format(result))
+    # print('hand landmarker result: {}'.format(result))
+    if len(result.hand_world_landmarks) > 0:
+        img_ = draw_landmarks_on_image(output_image.numpy_view(), result)
+        with image_dict["lock"]:
+            image_dict["img"] = img_.copy()
+
 
 options = HandLandmarkerOptions(
     base_options=BaseOptions(model_asset_path='hand_landmarker.task'),
     running_mode=VisionRunningMode.LIVE_STREAM,
+    num_hands=2,
     result_callback=print_result)
 
+# The landmarker is initialized. Use it here.
 with HandLandmarker.create_from_options(options) as landmarker:
-    # The landmarker is initialized. Use it here.
 
-    rate = rospy.Rate(10)
+    rate = rospy.Rate(30)
+
     while not rospy.is_shutdown():
         rate.sleep()
         img = get_rs_frame(rs_cam)
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=img) # Need to convert from bgra8 to rgb8?
+        img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGB)
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=img)  # Need to convert from bgra8 to rgb8
         frame_timestamp_ms = round(time.time() * 1000)
         landmarker.detect_async(mp_image, frame_timestamp_ms)
+        if image_dict["img"] is not None:
+            with image_dict["lock"]:
+                cv2.imshow("win", image_dict["img"])
+                cv2.waitKey(1)
 
 print("closing camera")
+cv2.destroyAllWindows()
 rs_cam.stop()
 
 
