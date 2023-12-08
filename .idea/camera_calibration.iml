@@ -12,8 +12,84 @@
       <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/bond" isTestSource="false" />
       <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/cartesian_control_msgs" isTestSource="false" />
       <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/rospy" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/compressed_depth_image_transport" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/compressed_image_transport" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/control_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/control_toolbox" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/controller_manager_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/costmap_2d" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/cv_bridge" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/depthimage_to_laserscan" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/diagnostic_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/diff_drive_controller" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/dwa_local_planner" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/dynamic_reconfigure" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/find_object_2d" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/gazebo_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/gazebo_plugins" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/gazebo_ros" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/geographic_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/geometry_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/graph_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/hector_mapping" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/image_proc" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/image_publisher" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/image_rotate" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/image_view" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/industrial_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/laser_assembler" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/laser_filters" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/map_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/move_base" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/move_base_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/moveit" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/moveit_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/nav_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/navfn" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/nodelet" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/nodelet_topic_tools" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/object_recognition_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/octomap_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/pcl_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/pcl_ros" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/polled_camera" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/realsense2_camera" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/robot_localization" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/rosauth" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/rosbridge_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/roscpp" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/roscpp_tutorials" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/rosgraph" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/rosgraph_msgs" isTestSource="false" />
       <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/rospy_tutorials" isTestSource="false" />
       <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/rosserial_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/rqt_bag" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/rqt_console" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/rqt_plot" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/rqt_py_common" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/rtabmap_legacy" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/rtabmap_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/rviz" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/sensor_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/shape_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/smach_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/std_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/std_srvs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/stereo_image_proc" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/stereo_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/teleop_tools_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/tf" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/tf2_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/theora_image_transport" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/topic_tools" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/trajectory_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/turtle_actionlib" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/turtlebot3_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/turtlesim" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/ur_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/urdf_parser_py" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/uuid_msgs" isTestSource="false" />
+      <sourceFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/visualization_msgs" isTestSource="false" />
       <excludeFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/actionlib-1.14.0.egg-info" />
       <excludeFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/angles" />
       <excludeFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/bondpy" />
@@ -167,6 +243,15 @@
       <excludeFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/urdfdom_py-0.4.6.egg-info" />
       <excludeFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/xacro" />
       <excludeFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/xacro-1.14.16.egg-info" />
+      <excludeFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/resource_retriever" />
+      <excludeFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/smach" />
+      <excludeFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/smach-2.5.2.egg-info" />
+      <excludeFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/smach_ros" />
+      <excludeFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/smach_ros-2.5.2.egg-info" />
+      <excludeFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/smclib" />
+      <excludeFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/smclib-1.8.6.egg-info" />
+      <excludeFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/srdfdom" />
+      <excludeFolder url="file:///opt/ros/noetic/lib/python3/dist-packages/srdfdom-0.6.4.egg-info" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.8" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

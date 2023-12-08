@@ -5,7 +5,10 @@ Uses the ur_rtde interface
 """
 
 import sys
+import time
+
 from rtde_receive import RTDEReceiveInterface as RTDEReceive
+from rtde_control import RTDEControlInterface as RTDEControl
 import cv2
 import cv2.aruco as aruco
 import pyzed.sl as sl
@@ -14,9 +17,9 @@ import pyrealsense2 as rs
 import math
 
 PRINT_CAM2WORLD = False  # Print values to check the rot and transl from cam2world
-VIEW_BOARD_ONCE = False  # If you only want see the board once, mostly for when capturing the rot and transl elements
-SAVE_ROT_TRANSL = False  # Saves the individual rot and transl elements for camera calibration
-SAVE_TEST_POSE = False  # Saves a pose for testing the calibration values
+VIEW_BOARD_ONCE = 1  # If you only want see the board once, mostly for when capturing the rot and transl elements
+SAVE_ROT_TRANSL = 1  # Saves the individual rot and transl elements for camera calibration
+SAVE_TEST_POSE = 0  # Saves a pose for testing the calibration values
 SAVE_ZED2WORLD = False  # The transform from the ZED camera to a point in the world (tgt) frame
 
 if SAVE_ZED2WORLD:
@@ -25,8 +28,11 @@ if SAVE_ZED2WORLD:
     # TODAY = f"{now.year}_{now.month}_{now.day}_{now.hour}_{now.minute}_{now.second}"
     # CAMERA = "ZED"
 else:
-    wp_num = 11
+    wp_num = 20
     CAMERA = "RS"
+    RS_GRIPPER_SN = '101622072236'
+    RS_FRAME_SN = '027322071961'
+
 
 def tcp_pose_scal(pose):
     """
@@ -53,7 +59,12 @@ def save_base2ee():
     :return: None
     """
     # Connect to the robot
-    rtde_r = RTDEReceive("192.158.5.2")
+    rtde_r = RTDEReceive("172.31.1.200")
+    rtde_c = RTDEControl("172.31.1.200", 500, RTDEControl.FLAG_USE_EXT_UR_CAP)
+    time.sleep(1)
+    rtde_c.setTcp([0,0,0.1575,0,0,0])
+    print(rtde_c.getTCPOffset())
+
 
     # Obtain EE pose and convert rotation vector to rotation matrix
     ee_pose = rtde_r.getActualTCPPose()
@@ -67,8 +78,7 @@ def save_base2ee():
         # Save rotation matrix and translation vector
         np.save(f"ee_transforms/BASE_TO_EE_{wp_num}_rot_mat", r_matr)
         np.save(f"ee_transforms/BASE_TO_EE_{wp_num}_t_vec", tvec)
-    # print([i*(180/3.14) for i in rtde_r.getActualQ()])
-    # print(tvec)
+
 
 def close_cam(cam):
     if CAMERA == "ZED":
@@ -87,6 +97,7 @@ def init_cam():
 def init_rs():
     pipeline = rs.pipeline()
     config = rs.config()
+    config.enable_device(RS_GRIPPER_SN)
     config.enable_stream(rs.stream.color, 1920, 1080, rs.format.bgra8, 30)
     # config.enable_stream(rs.stream.infrared, 424, 240, rs.format.y8, 6)
     cfg = pipeline.start(config)
@@ -195,7 +206,7 @@ def save_cam2world():
     try:
         cam, runtime_params, cam_matr, dist_coeff = init_cam()
         board, char_params = get_charuco_board()
-        # sys.exit()
+
         while True:
             frame = get_vid_frame(cam, runtime_params)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
@@ -221,15 +232,15 @@ def save_cam2world():
                     if PRINT_CAM2WORLD:
                         print("Rot matrix")
                         print(R_cam_target)
-                        print("tvec below")
+                        print("Translation vector")
                         print(tvec)
-                        print("Transformation matrix below")
+                        print("Transformation matrix")
                         print(T_cam_target)
 
                     if SAVE_TEST_POSE:
-                        np.save("T_cam2world.npy", T_cam_target)
+                        np.save("T_cam2world_wall.npy", T_cam_target)
                         T_base2gripper = create_T_matrix(*save_base2ee())
-                        np.save("T_base2gripper.npy", T_base2gripper)
+                        np.save("T_base2gripper_wall.npy", T_base2gripper)
 
                     if SAVE_ROT_TRANSL:
                         save_np_arr(R_cam_target, tvec)

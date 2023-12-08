@@ -1,4 +1,6 @@
 # https://github.com/UniversalRobots/RTDE_Python_Client_Library
+import sys
+
 from rtde_receive import RTDEReceiveInterface as RTDEReceive
 import rtde_control
 import cv2
@@ -7,7 +9,8 @@ import time
 from rtde_control import RTDEControlInterface as RTDEControl
 import math
 from spatialmath.base import rotx
-T_rs2gripper = np.load("T_rs2gripper.npy")
+T_rs2gripper = np.load("T_rs2gripper_4.npy")
+print(T_rs2gripper)
 
 def tcp_pose_scal(pose):
     """
@@ -37,10 +40,10 @@ def get_pose_vector():
     Obtain the pose vector ur rtde expects
     :return: pose vector
     """
-    T_base2gripper = np.load("T_base2gripper.npy")
-    T_cam2world = np.load("T_cam2world.npy")
+    T_base2gripper = np.load("T_base2gripper_wall.npy")
+    T_cam2world = np.load("T_cam2world_wall.npy")
     T_cam2world[:3, :3] = T_cam2world[:3, :3] @ rotx(180, 'deg')
-    T_base2world = T_base2gripper @ T_rs2gripper @ T_cam2world
+    T_base2world = T_base2gripper @ np.linalg.inv(T_rs2gripper) @ T_cam2world
     r_vec = cv2.Rodrigues(T_base2world[:3, :3])[0].squeeze().tolist()
     t_vec = T_base2world[:3, 3].tolist()
     return t_vec + r_vec
@@ -53,19 +56,25 @@ def obtain_curr_T(rtde_r):
     T_base2gripper = create_T_matrix(r_matr, tvec)
     np.save("T_base2gripper", T_base2gripper)
 
-
+# Connect to UR
 rtde_frequency = 500.0
-rtde_c = RTDEControl("192.158.5.2", rtde_frequency, RTDEControl.FLAG_USE_EXT_UR_CAP)
-rtde_r = RTDEReceive("192.158.5.2")
-# q = rtde_r.getActualQ(); print(q)
-init_q = [-0.15263349214662725, -1.9617778263487757, 1.8334344069110315, -1.5824738941588343, -1.3699825445758265, -3.1928420702563685]
-rtde_c.moveJ(init_q, speed=0.4)
+rtde_c = RTDEControl("172.31.1.200", rtde_frequency)#, RTDEControl.FLAG_USE_EXT_UR_CAP)
+rtde_r = RTDEReceive("172.31.1.200")
+
+# Obtain initial q and move robot to initial q
+# q = rtde_r.getActualQ(); print(q); sys.exit()
+init_q = [-1.1531084219561976, -1.9913751087584437, 2.119514290486471, -3.268849035302633, -1.9888418356524866, 0.0037348323967307806]
+# rtde_c.moveJ(init_q, speed=0.1)
+
+# Obtain desired pose based on charuco board location
 des_ee_pose = get_pose_vector()
-des_ee_pose[2] = des_ee_pose[2] + 0.05
-sol_q = rtde_c.getInverseKinematics(x=des_ee_pose, qnear=init_q)
-rtde_c.moveJ(sol_q, speed=0.1)
+sol_q = rtde_c.getInverseKinematics(x=des_ee_pose, qnear=init_q)  # Find suitable joint states
+
+# Either move the robot or just print the joint angles
+# rtde_c.moveJ(sol_q, speed=0.1)
 sol_q_deg = [i * 57.296 for i in sol_q]
-print(sol_q_deg)
+print(f"x_des: {des_ee_pose[:3] + tcp_pose_scal(des_ee_pose)}")
+print(f"q: {sol_q_deg}")
 
 # print("connecting to robot...")
 # rtde_r = rtde_receive.RTDEReceiveInterface("192.158.5.2")
