@@ -1,18 +1,10 @@
 """
-Eye-in-hand calibration script with the following requirements
-natsort==8.4.0
-numpy==1.24.4
-opencv-python==4.8.1.78
-
 Assumes that there is a folder called ee_transforms and {CAM_NAME}_transforms which contain matching base2ee and
 camera2tgt rot_mat/t_vec respectively. For example, RS_TO_TGT_0_rot_mat.npy and BASE_TO_EE_0_rot_mat.npy are matching
 rotation matrices.
 
 The calibrated transformation matrix is saved in the current directory with the following format:
 {CAM_NAME}2gripper_{now.year}_{now.month}_{now.day}_{now.hour}_{now.minute}_{now.second}
-
-Run the scripts as follows ./cam_cal {camera name} {handeyecalib method, default: CALIB_HAND_EYE_TSAI}
-hand-eye-calib methods: https://docs.opencv.org/4.x/d9/d0c/group__calib3d.html#gad10a5ef12ee3499a0774c7904a801b99
 """
 import sys
 import argparse
@@ -24,14 +16,8 @@ from datetime import datetime
 now = datetime.now()
 TODAY = f"{now.year}_{now.month}_{now.day}_{now.hour}_{now.minute}_{now.second}"
 
-parser = argparse.ArgumentParser(description='Eye-in-hand calibration script')
-parser.add_argument('--CAM_NAME', metavar='camera name', default="rs",  help='name of camera')
-parser.add_argument('--METHOD', metavar='cv2.HandEyeCalibrationMethod', default=cv2.CALIB_HAND_EYE_TSAI,
-                    help='A cv2.HandEyeCalibrationMethod')
-
-args = parser.parse_args()
-CAM_NAME = args.CAM_NAME
-METHOD = args.METHOD
+CAM_NAME = "rs"
+METHOD = 4
 print(f"camera name is {CAM_NAME}")
 print(f"cv2.HandEyeCalibrationMethod used is {METHOD}")
 
@@ -79,8 +65,7 @@ for i in range(num_transforms):
         print(curr_ee_file)
         print(curr_cam_file)
         raise "np arrays do not match. See printouts above"
-METHOD=4
-TODAY=METHOD
+
 R_cam2gripper, t_cam2gripper = cv2.calibrateHandEye(R_gripper2base=R_gripper2base,
                                                     t_gripper2base=t_gripper2base,
                                                     R_target2cam=R_target2cam,
