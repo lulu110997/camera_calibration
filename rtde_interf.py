@@ -9,14 +9,19 @@ import time
 from rtde_control import RTDEControlInterface as RTDEControl
 import math
 from spatialmath.base import rotx
-T_rs2gripper = np.load("T_rs2gripper_4.npy")
-print(T_rs2gripper)
+T_gripper2cam = np.load("T_gripper2rs.npy")
+T_base2gripper = np.load("test_transforms/T_base2gripper_table.npy")
+T_cam2world = np.load("test_transforms/T_cam2world_table.npy")
+
 
 def tcp_pose_scal(pose):
     """
     from https://forum.universal-robots.com/t/state-actual-tcp-pose-results-in-wrong-pose/14498/9
-    :param pose: ee_pose
-    :return: scaled axis-angle orientation
+    Mainly for printing out the scaled axis angles (in radians)
+    Args:
+        pose: ee_pose
+
+    Returns:scaled axis-angle orientation
     """
     v = pose
     pi = 3.1416
@@ -30,40 +35,40 @@ def tcp_pose_scal(pose):
 
     return tcp_pose[3:]
 
+
 def create_T_matrix(rmatr, tvec):
+    """
+    Create a homogenous transformation matrix from the rotation matrix and translation vector
+    Args:
+        rmatr: 3x3 rotation matrix
+        tvec: 3x1 translation vector
+
+    Returns: 4x4 homogenous transformation matrix
+    """
     R = np.vstack((rmatr, np.zeros((1, 3))))
     t = np.vstack((tvec, np.ones((1, 1))))
     return np.hstack((R, t))
 
+
 def get_pose_vector():
     """
     Obtain the pose vector ur rtde expects
-    :return: pose vector
+    Returns: pose vector
     """
-    T_base2gripper = np.load("T_base2gripper_wall.npy")
-    T_cam2world = np.load("T_cam2world_wall.npy")
-    T_cam2world[:3, :3] = T_cam2world[:3, :3] @ rotx(180, 'deg')
-    T_base2world = T_base2gripper @ np.linalg.inv(T_rs2gripper) @ T_cam2world
+    T_cam2world[:3, :3] = rotx(180, 'deg') @ T_cam2world[:3, :3]
+    T_base2world = T_base2gripper @ T_gripper2cam @ T_cam2world
     r_vec = cv2.Rodrigues(T_base2world[:3, :3])[0].squeeze().tolist()
     t_vec = T_base2world[:3, 3].tolist()
     return t_vec + r_vec
 
-def obtain_curr_T(rtde_r):
-    ee_pose = rtde_r.getActualTCPPose()
-    rvec = np.array(ee_pose[3:])
-    tvec = np.array(ee_pose[:3]).reshape(3, 1)
-    r_matr = cv2.Rodrigues(rvec)[0]
-    T_base2gripper = create_T_matrix(r_matr, tvec)
-    np.save("T_base2gripper", T_base2gripper)
-
 # Connect to UR
 rtde_frequency = 500.0
-rtde_c = RTDEControl("172.31.1.200", rtde_frequency)#, RTDEControl.FLAG_USE_EXT_UR_CAP)
+rtde_c = RTDEControl("172.31.1.200", rtde_frequency)
 rtde_r = RTDEReceive("172.31.1.200")
 
 # Obtain initial q and move robot to initial q
 # q = rtde_r.getActualQ(); print(q); sys.exit()
-init_q = [-1.1531084219561976, -1.9913751087584437, 2.119514290486471, -3.268849035302633, -1.9888418356524866, 0.0037348323967307806]
+init_q = [0.5454618334770203, -1.5271859516254445, 1.3794172445880335, -1.7549616299071253, 4.627932548522949, -0.13782769838442022]
 # rtde_c.moveJ(init_q, speed=0.1)
 
 # Obtain desired pose based on charuco board location
@@ -73,21 +78,9 @@ sol_q = rtde_c.getInverseKinematics(x=des_ee_pose, qnear=init_q)  # Find suitabl
 # Either move the robot or just print the joint angles
 # rtde_c.moveJ(sol_q, speed=0.1)
 sol_q_deg = [i * 57.296 for i in sol_q]
+print(rtde_c.getTCPOffset())
 print(f"x_des: {des_ee_pose[:3] + tcp_pose_scal(des_ee_pose)}")
 print(f"q: {sol_q_deg}")
-
-# print("connecting to robot...")
-# rtde_r = rtde_receive.RTDEReceiveInterface("192.158.5.2")
-# rtde_c = rtde_control.RTDEControlInterface("192.158.5.2")
-# init_q = [-0.35702735582460576, -0.9135687512210389, 0.656994644795553,
-#           -1.312950925236084, -1.5706594626056116, -0.3629344145404261]
-# final_q = rtde_c.getInverseKinematics([-0.68025457, -0.06188002, -0.01239602,
-#                                        -0.07850479, -1.50668142, -0.30036346], qnear=init_q)
-# print(rtde_r.getActualTCPPose())
-# print(rtde_r.getActualQ())
-# rtde_c.moveJ(init_q, speed=0.4)
-
-# obtain_curr_T(rtde_r)
 
 # rtde_c.freedriveMode([1, 1, 1, 1, 1, 1])
 #
@@ -103,16 +96,3 @@ print(f"q: {sol_q_deg}")
 #     print(tvec)
 #
 # rtde_c.endFreedriveMode()
-
-
-# import numpy as np
-# import cv2
-#
-# c_points = np.loadtxt("ss. ur_waypoints/c_points.txt", delimiter=",")
-#
-# for idx, c in enumerate(c_points, start=1):
-#     rvec = c[3:]
-#     tvec = c[:3]
-#     rmat = cv2.Rodrigues(rvec)[0]
-#     np.save(f"ee_transforms/BASE_TO_EE_{idx}_rot_mat", rmat)
-#     np.save(f"ee_transforms/BASE_TO_EE_{idx}_t_vec", tvec)

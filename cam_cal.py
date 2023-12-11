@@ -38,9 +38,11 @@ print(f"cv2.HandEyeCalibrationMethod used is {METHOD}")
 def create_T_matrix(rmatr, tvec):
     """
     Create a homogenous transformation matrix from the rotation matrix and translation vector
-    :param rmatr: 3x3 rotation matrix
-    :param tvec: 3x1 translation vector
-    :return: 4x4 homogenous transformation matrix
+    Args:
+        rmatr: 3x3 rotation matrix
+        tvec: 3x1 translation vector
+
+    Returns: 4x4 homogenous transformation matrix
     """
     # Check the shapes of the rotation matrix and translation vector is correct
     assert tvec.shape == (3, 1), f"The translation vector is the wrong shape! It is {tvec.shape}"
@@ -60,20 +62,19 @@ t_gripper2base = []
 R_target2cam = []
 t_target2cam = []
 
-num_transforms = 20
+num_transforms = len(ee_trans_path)
 
-for i in range(40):
+for i in range(num_transforms):
     curr_cam_file = cam_trans_path[i]
     curr_ee_file = ee_trans_path[i]
     np_cam = np.load(curr_cam_file)
     np_ee = np.load(curr_ee_file)
     if ("rot_mat" in curr_cam_file) and ("rot_mat" in curr_ee_file):
         R_target2cam.append(np_cam)
-        rot_ee = np.transpose(np_ee)
-        R_gripper2base.append(rot_ee)
+        R_gripper2base.append(np_ee)
     elif ("t_vec" in curr_cam_file) and ("t_vec" in curr_ee_file):
         t_target2cam.append(np_cam)
-        t_gripper2base.append(-rot_ee @ np_ee)
+        t_gripper2base.append(np_ee)
     else:
         print(curr_ee_file)
         print(curr_cam_file)
@@ -88,5 +89,5 @@ R_cam2gripper, t_cam2gripper = cv2.calibrateHandEye(R_gripper2base=R_gripper2bas
 
 
 T_cam2_gripper = create_T_matrix(R_cam2gripper, t_cam2gripper)
-np.save(f"T_{CAM_NAME}2gripper_{TODAY}", T_cam2_gripper)
-print(T_cam2_gripper)
+np.save(f"T_gripper2{CAM_NAME}_{TODAY}", T_cam2_gripper)
+print(t_cam2gripper)
