@@ -1,3 +1,4 @@
+import sys
 import time
 from mp_viz import draw_landmarks_on_image
 import cv2
@@ -8,12 +9,32 @@ import numpy as np
 import pyrealsense2 as rs
 import rospy
 from threading import Thread, Lock
+from cv_bridge import CvBridge
+from sensor_msgs.msg import Image
+from geometry_msgs.msg import PoseArray, Pose
 
 image_dict = {"img": None, "lock": Lock()}
+bridge = CvBridge()
+image_pub = rospy.Publisher("mp_rgb_img", Image, queue_size=30)
+left_hand_pub = rospy.Publisher("left_hand_skel_data", PoseArray, queue_size=30)
+right_hand_pub = rospy.Publisher("right_hand_skel_data", PoseArray, queue_size=30)
+
+def pub_img_data(image_np, ts):
+    """
+    Publisher for image where the skeleton data was extracted. Uses CvBridge
+    Args:
+        image_np: np array | corresponding RGB image to when the skeleton was extracted
+        ts: int | ros time in nanoseconds corresponding ot when nuitrack.update was called
+
+    Returns: None
+
+    """
+    image_msg = bridge.cv2_to_imgmsg(image_np, encoding="bgra8")
+    image_pub.publish(image_msg)
 
 rospy.init_node("random")
-RS_SN = '027322071961'
-
+# RS_SN = '027322071961'
+RS_SN = '017322070251'
 def init_rs():
     pipeline = rs.pipeline()
     config = rs.config()
@@ -57,21 +78,42 @@ VisionRunningMode = mp.tasks.vision.RunningMode
 
 def publish_data(result: HandLandmarkerResult, output_image: mp.Image, timestamp_ms: int):
     """
-    Publisher callback whenever data is received. This is where the hand skeleton data and corresponding image will be
-    published
+    Publisher callback whenever data is received. This is where the hand skeleton data is published
     Args:
         result: HandLandmarkerResult | Stores the results of handlandmarker software
         output_image: mp.Image | Mediapipe image where the hand skeleton was extracted from
-        timestamp_ms: int | ROS timestamp in nanoseconds
+        timestamp_ms: int | ROS timestamp in milliseconds
 
     Returns: None
-
     """
-    # print('hand landmarker result: {}'.format(result))
+
     if len(result.hand_world_landmarks) > 0:
-        img_ = draw_landmarks_on_image(output_image.numpy_view(), result)
-        with image_dict["lock"]:
-            image_dict["img"] = img_.copy()
+        # img_ = draw_landmarks_on_image(output_image.numpy_view(), result)
+        # with image_dict["lock"]:
+        #     image_dict["img"] = img_.copy()
+        hands_list = result.hand_landmarks  # List of hands containing List of hand landmarks
+        handedness = result.handedness  # Obtain whether the hand is left or right hand
+        for idx, hand in enumerate(hands_list):  # Iterate through each hand
+            if handedness[idx][0].category_name == "Left":
+                hand_publisher = left_hand_pub
+            else:
+                hand_publisher = right_hand_pub
+            hand_joints = PoseArray()
+            # hand_joints.header.stamp.nsecs = timestamp_ms/10000
+            for joint in hand:
+                hand_pose = Pose()
+                hand_pose.position.x = joint.x
+                hand_pose.position.y = joint.y
+                hand_pose.position.z = joint.z
+                hand_pose.orientation.x = 0
+                hand_pose.orientation.y = 0
+                hand_pose.orientation.z = 0
+                hand_pose.orientation.w = 1
+                hand_joints.poses.append(hand_pose)
+            hand_publisher.publish(hand_joints)
+
+        # for idx in range(len(hand_joints)):
+        #     hand_joints = hand_joints[idx]
 
 
 options = HandLandmarkerOptions(
@@ -79,26 +121,28 @@ options = HandLandmarkerOptions(
     running_mode=VisionRunningMode.LIVE_STREAM,
     num_hands=2,
     result_callback=publish_data)
+try:
+    # The landmarker is initialized. Use it here.
+    with HandLandmarker.create_from_options(options) as landmarker:
 
-# The landmarker is initialized. Use it here.
-with HandLandmarker.create_from_options(options) as landmarker:
+        rate = rospy.Rate(30)
 
-    rate = rospy.Rate(30)
-
-    while not rospy.is_shutdown():
-        rate.sleep()
-        img = get_rs_frame(rs_cam)
-        img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGB)  # Need to convert from bgra8 to rgb8
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=img)
-        frame_timestamp_ms = round(time.time() * 1000)
-        landmarker.detect_async(mp_image, frame_timestamp_ms)
-        if image_dict["img"] is not None:
-            with image_dict["lock"]:
-                cv2.imshow("win", image_dict["img"])
-                cv2.waitKey(1)
-
-print("closing camera")
-cv2.destroyAllWindows()
-rs_cam.stop()
+        while not rospy.is_shutdown():
+            rate.sleep()
+            img = get_rs_frame(rs_cam)
+            now_s = rospy.get_time()
+            pub_img_data(img, now_s)
+            img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGB)  # Need to convert from bgra8 to rgb8
+            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=img)
+            # print(rospy.get_rostime().nsecs)
+            landmarker.detect_async(mp_image, int(now_s*10000))
+            # if image_dict["img"] is not None:
+            #     with image_dict["lock"]:
+            #         cv2.imshow("win", image_dict["img"])
+            #         cv2.waitKey(1)
+finally:
+    print("closing camera")
+    cv2.destroyAllWindows()
+    rs_cam.stop()
 
 
