@@ -48,14 +48,25 @@ def get_rs_frame(pipeline):
 rs_cam, __, rs_cam_par, rs_dist_coeff = init_rs()
 
 
-# 
+# Setup mediapipe
 BaseOptions = mp.tasks.BaseOptions
 HandLandmarker = mp.tasks.vision.HandLandmarker
 HandLandmarkerOptions = mp.tasks.vision.HandLandmarkerOptions
 HandLandmarkerResult = mp.tasks.vision.HandLandmarkerResult
 VisionRunningMode = mp.tasks.vision.RunningMode
 
-def print_result(result: HandLandmarkerResult, output_image: mp.Image, timestamp_ms: int):
+def publish_data(result: HandLandmarkerResult, output_image: mp.Image, timestamp_ms: int):
+    """
+    Publisher callback whenever data is received. This is where the hand skeleton data and corresponding image will be
+    published
+    Args:
+        result: HandLandmarkerResult | Stores the results of handlandmarker software
+        output_image: mp.Image | Mediapipe image where the hand skeleton was extracted from
+        timestamp_ms: int | ROS timestamp in nanoseconds
+
+    Returns: None
+
+    """
     # print('hand landmarker result: {}'.format(result))
     if len(result.hand_world_landmarks) > 0:
         img_ = draw_landmarks_on_image(output_image.numpy_view(), result)
@@ -67,7 +78,7 @@ options = HandLandmarkerOptions(
     base_options=BaseOptions(model_asset_path='hand_landmarker.task'),
     running_mode=VisionRunningMode.LIVE_STREAM,
     num_hands=2,
-    result_callback=print_result)
+    result_callback=publish_data)
 
 # The landmarker is initialized. Use it here.
 with HandLandmarker.create_from_options(options) as landmarker:
