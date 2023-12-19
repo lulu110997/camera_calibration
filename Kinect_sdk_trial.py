@@ -1,5 +1,9 @@
 import freenect
 import cv2
+from itertools import cycle
+import numpy as np
+import rospy
+from PyNuitrack import py_nuitrack
 import frame_convert2
 
 cv2.namedWindow('Depth')

@@ -43,10 +43,11 @@ nuitrack.init()
 
 # ---enable if you want to use face tracking---
 # nuitrack.set_config_value("Faces.ToUse", "true")
+
 nuitrack.set_config_value("DepthProvider.Depth2ColorRegistration", "true")
 nuitrack.set_config_value("Skeletonization.Type", "CNN_HPE")
-# nuitrack.set_config_value("Skeletonization.MaxDistance", "2000")
-# nuitrack.set_config_value("Skeletonization.ActiveUsers", "1")
+nuitrack.set_config_value("Skeletonization.MaxDistance", "1500")
+nuitrack.set_config_value("Skeletonization.ActiveUsers", "1")
 
 devices = nuitrack.get_device_list()
 cam_activated = False

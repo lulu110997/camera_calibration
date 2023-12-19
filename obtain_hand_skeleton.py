@@ -12,12 +12,12 @@ from threading import Thread, Lock
 image_dict = {"img": None, "lock": Lock()}
 
 rospy.init_node("random")
-RS_FRAME_SN = '027322071961'
+RS_SN = '027322071961'
 
 def init_rs():
     pipeline = rs.pipeline()
     config = rs.config()
-    config.enable_device(RS_FRAME_SN)
+    config.enable_device(RS_SN)
     config.enable_stream(rs.stream.color, 1920, 1080, rs.format.bgra8, 30)
     # config.enable_stream(rs.stream.infrared, 424, 240, rs.format.y8, 6)
     cfg = pipeline.start(config)
@@ -47,13 +47,14 @@ def get_rs_frame(pipeline):
 
 rs_cam, __, rs_cam_par, rs_dist_coeff = init_rs()
 
+
+# 
 BaseOptions = mp.tasks.BaseOptions
 HandLandmarker = mp.tasks.vision.HandLandmarker
 HandLandmarkerOptions = mp.tasks.vision.HandLandmarkerOptions
 HandLandmarkerResult = mp.tasks.vision.HandLandmarkerResult
 VisionRunningMode = mp.tasks.vision.RunningMode
 
-# Create a hand landmarker instance with the live stream mode:
 def print_result(result: HandLandmarkerResult, output_image: mp.Image, timestamp_ms: int):
     # print('hand landmarker result: {}'.format(result))
     if len(result.hand_world_landmarks) > 0:
