@@ -9,9 +9,10 @@ from geometry_msgs.msg import PoseArray, Pose
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 
+MILLISECONDS = 1000.0
 VISUALISE_DEPTH = 0
 VISUALISE_COLOR = 0
-rospy.init_node("skeleton_tracking")
+rospy.init_node("body_tracking")
 image_pub = rospy.Publisher("nuitrack_rgb_image", Image, queue_size=30)
 skel_pub = rospy.Publisher("nuitrack_skel_data", PoseArray, queue_size=30)
 bridge = CvBridge()
@@ -63,13 +64,15 @@ def pub_skel_data(skel, ts):
     Publisher for the skeleton data
     Args:
         skel: output of get_skeleton | contains SkeletonResult object
-        ts: int | ros time in nanoseconds corresponding ot when nuitrack.update was called
+        ts: int | ros Time which was converted and rounded to milliseconds
 
     Returns: None
     """
+    time_ros = rospy.Time.from_sec(ts / MILLISECONDS)
     s = skel.skeletons[0]  # We only care about the tracking the joints of the first (hopefully closest) person
     joint_poses = PoseArray()
-    joint_poses.header.stamp.nsecs = ts
+    joint_poses.header.stamp.secs = time_ros.secs
+    joint_poses.header.stamp.nsecs = time_ros.nsecs
     for j in s[1:]:
         pose = Pose()  # create a new Pose message and populate its fields
         pose.position.x, pose.position.y, pose.position.z = j.projection[0], j.projection[1], j.projection[2]
@@ -84,12 +87,15 @@ def pub_img_data(image_np, ts):
     Publisher for image where the skeleton data was extracted. Uses CvBridge
     Args:
         image_np: np array | corresponding RGB image to when the skeleton was extracted
-        ts: int | ros time in nanoseconds corresponding ot when nuitrack.update was called
+        ts: int | ros Time which was converted and rounded to milliseconds
 
     Returns: None
 
     """
+    time_ros = rospy.Time.from_sec(ts / MILLISECONDS)
     image_msg = bridge.cv2_to_imgmsg(image_np, encoding="bgr8")
+    image_msg.header.stamp.secs = time_ros.secs
+    image_msg.header.stamp.nsecs = time_ros.nsecs
     image_pub.publish(image_msg)
 
 def init_nuitrack():
@@ -137,7 +143,7 @@ def main(nuitrack):
         while not rospy.is_shutdown():
             rate.sleep()
             nuitrack.update()
-            now = rospy.get_rostime().nsecs  # Obtain ROS time, in nanoseconds, when the nuitrack software is updated
+            now = round(rospy.get_time()*MILLISECONDS)  # Converted to ms to suit mediapipe
             skel_data = nuitrack.get_skeleton()
             img_color = nuitrack.get_color_data()
             if skel_data.skeletons:
