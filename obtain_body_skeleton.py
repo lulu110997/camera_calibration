@@ -59,11 +59,12 @@ def draw_skeleton(skel_data, img_vis):
         cv2.waitKey(1)
 
 
-def pub_skel_data(skel, ts):
+def pub_skel_data(skel, image_np, ts):
     """
-    Publisher for the skeleton data
+    Publisher for the skeleton data and for image where the skeleton data was extracted. Uses CvBridge
     Args:
         skel: output of get_skeleton | contains SkeletonResult object
+        image_np: np array | corresponding RGB image to when the skeleton was extracted
         ts: int | ros Time which was converted and rounded to milliseconds
 
     Returns: None
@@ -82,21 +83,13 @@ def pub_skel_data(skel, ts):
         joint_poses.poses.append(pose)  # add the new Pose object to the PoseArray list
     skel_pub.publish(joint_poses)
 
-def pub_img_data(image_np, ts):
-    """
-    Publisher for image where the skeleton data was extracted. Uses CvBridge
-    Args:
-        image_np: np array | corresponding RGB image to when the skeleton was extracted
-        ts: int | ros Time which was converted and rounded to milliseconds
+    # Only want an image if we have extracted a skeleton from that img
+    if len(joint_poses.poses):
+        image_msg = bridge.cv2_to_imgmsg(image_np, encoding="bgr8")
+        image_msg.header.stamp.secs = time_ros.secs
+        image_msg.header.stamp.nsecs = time_ros.nsecs
+        image_pub.publish(image_msg)
 
-    Returns: None
-
-    """
-    time_ros = rospy.Time.from_sec(ts / MILLISECONDS)
-    image_msg = bridge.cv2_to_imgmsg(image_np, encoding="bgr8")
-    image_msg.header.stamp.secs = time_ros.secs
-    image_msg.header.stamp.nsecs = time_ros.nsecs
-    image_pub.publish(image_msg)
 
 def init_nuitrack():
     """
@@ -147,8 +140,7 @@ def main(nuitrack):
             skel_data = nuitrack.get_skeleton()
             img_color = nuitrack.get_color_data()
             if skel_data.skeletons:
-                pub_skel_data(skel_data, now)
-                pub_img_data(img_color, now)
+                pub_skel_data(skel_data, img_color, now)
                 if VISUALISE_DEPTH:
                     img_vis = nuitrack.get_depth_data()
                     cv2.normalize(img_vis, img_vis, 0, 255, cv2.NORM_MINMAX)

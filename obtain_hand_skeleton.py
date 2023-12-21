@@ -26,20 +26,6 @@ right_hand_pub = rospy.Publisher("right_hand_skel_data", PoseArray, queue_size=3
 MILLISECONDS = 1000.0
 
 
-def pub_img_data(image_np, ts):
-    """
-    Publisher for image where the skeleton data was extracted. Uses CvBridge
-    Args:
-        image_np: np array | corresponding RGB image to when the skeleton was extracted
-        ts: int | ros time in nanoseconds corresponding ot when nuitrack.update was called
-
-    Returns: None
-
-    """
-    image_msg = bridge.cv2_to_imgmsg(image_np, encoding="bgra8")
-    image_pub.publish(image_msg)
-
-
 def init_rs():
     pipeline = rs.pipeline()
     config = rs.config()
@@ -81,6 +67,7 @@ HandLandmarkerOptions = mp.tasks.vision.HandLandmarkerOptions
 HandLandmarkerResult = mp.tasks.vision.HandLandmarkerResult
 VisionRunningMode = mp.tasks.vision.RunningMode
 
+
 def publish_data(result: HandLandmarkerResult, output_image: mp.Image, timestamp_ms: int):
     """
     Publisher callback whenever data is received. This is where the hand skeleton data is published
@@ -91,40 +78,44 @@ def publish_data(result: HandLandmarkerResult, output_image: mp.Image, timestamp
 
     Returns: None
     """
+    try:
+        if len(result.hand_world_landmarks) > 0:
 
-    if len(result.hand_world_landmarks) > 0:
-        # img_ = draw_landmarks_on_image(output_image.numpy_view(), result)
-        # with image_dict["lock"]:
-        #     image_dict["img"] = img_.copy()
+            time_ros = rospy.Time.from_sec(timestamp_ms/MILLISECONDS)
 
-        time_ros = rospy.Time.from_sec(timestamp_ms/MILLISECONDS)
+            image_msg = bridge.cv2_to_imgmsg(output_image.numpy_view(), encoding="rgb8")
+            image_msg.header.stamp.secs = time_ros.secs
+            image_msg.header.stamp.nsecs = time_ros.nsecs
+            image_pub.publish(image_msg)
 
-        image_msg = bridge.cv2_to_imgmsg(output_image.numpy_view(), encoding="rgb8")
-        image_msg.header.stamp.secs = time_ros.secs
-        image_msg.header.stamp.nsecs = time_ros.nsecs
-        image_pub.publish(image_msg)
-
-        hands_list = result.hand_landmarks  # List of hands containing List of hand landmarks
-        handedness = result.handedness  # Obtain whether the hand is left or right hand
-        for idx, hand in enumerate(hands_list):  # Iterate through each hand
-            if handedness[idx][0].category_name == "Left":
-                hand_publisher = left_hand_pub
-            else:
-                hand_publisher = right_hand_pub
-            hand_joints = PoseArray()
-            hand_joints.header.stamp.secs = time_ros.secs
-            hand_joints.header.stamp.nsecs = time_ros.nsecs
-            for joint in hand:
-                hand_pose = Pose()
-                hand_pose.position.x = joint.x
-                hand_pose.position.y = joint.y
-                hand_pose.position.z = joint.z
-                hand_pose.orientation.x = 0
-                hand_pose.orientation.y = 0
-                hand_pose.orientation.z = 0
-                hand_pose.orientation.w = 1
-                hand_joints.poses.append(hand_pose)
-            hand_publisher.publish(hand_joints)
+            hands_list = result.hand_landmarks  # List of hands containing List of hand landmarks
+            handedness = result.handedness  # Obtain whether the hand is left or right hand
+            for idx, hand in enumerate(hands_list):  # Iterate through each hand
+                print(handedness[idx][1])
+                # print(handedness[idx][0].category_name)
+                if handedness[idx][0].category_name == "Left":
+                    hand_publisher = left_hand_pub
+                elif handedness[idx][0].category_name == "Right":
+                    hand_publisher = right_hand_pub
+                else:
+                    print(handedness[idx][0].category_name)
+                    raise "wat"
+                hand_joints = PoseArray()
+                hand_joints.header.stamp.secs = time_ros.secs
+                hand_joints.header.stamp.nsecs = time_ros.nsecs
+                for joint in hand:
+                    hand_pose = Pose()
+                    hand_pose.position.x = joint.x
+                    hand_pose.position.y = joint.y
+                    hand_pose.position.z = joint.z
+                    hand_pose.orientation.x = 0
+                    hand_pose.orientation.y = 0
+                    hand_pose.orientation.z = 0
+                    hand_pose.orientation.w = 1
+                    hand_joints.poses.append(hand_pose)
+                hand_publisher.publish(hand_joints)
+    except:
+        print("error101")
 
 options = HandLandmarkerOptions(
     base_options=BaseOptions(model_asset_path='hand_landmarker.task', delegate=tasks.BaseOptions.Delegate.GPU),
