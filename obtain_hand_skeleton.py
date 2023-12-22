@@ -25,6 +25,13 @@ left_hand_pub = rospy.Publisher("left_hand_skel_data", PoseArray, queue_size=30)
 right_hand_pub = rospy.Publisher("right_hand_skel_data", PoseArray, queue_size=30)
 MILLISECONDS = 1000.0
 
+# Setup mediapipe
+BaseOptions = mp.tasks.BaseOptions
+HandLandmarker = mp.tasks.vision.HandLandmarker
+HandLandmarkerOptions = mp.tasks.vision.HandLandmarkerOptions
+HandLandmarkerResult = mp.tasks.vision.HandLandmarkerResult
+VisionRunningMode = mp.tasks.vision.RunningMode
+
 
 def init_rs():
     pipeline = rs.pipeline()
@@ -57,17 +64,6 @@ def get_rs_frame(pipeline):
     return color_image
 
 
-rs_cam, __, rs_cam_par, rs_dist_coeff = init_rs()
-
-
-# Setup mediapipe
-BaseOptions = mp.tasks.BaseOptions
-HandLandmarker = mp.tasks.vision.HandLandmarker
-HandLandmarkerOptions = mp.tasks.vision.HandLandmarkerOptions
-HandLandmarkerResult = mp.tasks.vision.HandLandmarkerResult
-VisionRunningMode = mp.tasks.vision.RunningMode
-
-
 def publish_data(result: HandLandmarkerResult, output_image: mp.Image, timestamp_ms: int):
     """
     Publisher callback whenever data is received. This is where the hand skeleton data is published
@@ -91,8 +87,6 @@ def publish_data(result: HandLandmarkerResult, output_image: mp.Image, timestamp
             hands_list = result.hand_landmarks  # List of hands containing List of hand landmarks
             handedness = result.handedness  # Obtain whether the hand is left or right hand
             for idx, hand in enumerate(hands_list):  # Iterate through each hand
-                print(handedness[idx][1])
-                # print(handedness[idx][0].category_name)
                 if handedness[idx][0].category_name == "Left":
                     hand_publisher = left_hand_pub
                 elif handedness[idx][0].category_name == "Right":
@@ -117,32 +111,33 @@ def publish_data(result: HandLandmarkerResult, output_image: mp.Image, timestamp
     except:
         print("error101")
 
-options = HandLandmarkerOptions(
-    base_options=BaseOptions(model_asset_path='hand_landmarker.task', delegate=tasks.BaseOptions.Delegate.GPU),
-    running_mode=VisionRunningMode.LIVE_STREAM,
-    num_hands=2,
-    result_callback=publish_data)
-try:
-    # The landmarker is initialized. Use it here.
-    with HandLandmarker.create_from_options(options) as landmarker:
 
-        rate = rospy.Rate(30)
+def main():
+    rs_cam, __, rs_cam_par, rs_dist_coeff = init_rs()
 
-        while not rospy.is_shutdown():
-            rate.sleep()
-            img = get_rs_frame(rs_cam)
-            now_ms = round(rospy.get_time()*1000)
-            img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGB)  # Need to convert from bgra8 to rgb8
-            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=img)
-            # print(rospy.get_rostime().nsecs)
-            landmarker.detect_async(mp_image, now_ms)
-            # if image_dict["img"] is not None:
-            #     with image_dict["lock"]:
-            #         cv2.imshow("win", image_dict["img"])
-            #         cv2.waitKey(1)
-finally:
-    print("closing camera")
-    cv2.destroyAllWindows()
-    rs_cam.stop()
+    options = HandLandmarkerOptions(
+        base_options=BaseOptions(model_asset_path='hand_landmarker.task', delegate=tasks.BaseOptions.Delegate.GPU),
+        running_mode=VisionRunningMode.LIVE_STREAM,
+        num_hands=2,
+        result_callback=publish_data)
 
+    try:
+        # The landmarker is initialized. Use it here.
+        with HandLandmarker.create_from_options(options) as landmarker:
 
+            rate = rospy.Rate(30)
+
+            while not rospy.is_shutdown():
+                rate.sleep()
+                img = get_rs_frame(rs_cam)
+                now_ms = round(rospy.get_time()*MILLISECONDS)
+                img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGB)  # Need to convert from bgra8 to rgb8
+                mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=img)
+                landmarker.detect_async(mp_image, now_ms)
+
+    finally:
+        print("closing camera")
+        cv2.destroyAllWindows()
+        rs_cam.stop()
+
+main()
