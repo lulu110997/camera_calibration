@@ -6,11 +6,67 @@ import sys
 import rospy
 import rosbag
 from geometry_msgs.msg import PoseArray, Pose
-BAG_PATH = "/home/louis/test0_userB.bag"
+BAG_PATH = "/home/louis/Data/2023_12_HAR_bags/test0_userB.bag"
 bridge = CvBridge()
 rospy.init_node("rosbag_reader", anonymous=True)
 rate = rospy.Rate(15)
 
+
+def hs_data_to_csv():
+    """
+    Reads rosbag and converts hand skeletal data to csv files
+    Returns: None
+    """
+    left_hand = {'time': [], 'data': []}
+    right_hand = {'time': [], 'data': []}
+    # mp_joint_names = ["WRIST",
+    #                   "THUMB_CMC", "THUMB_MCP", "THUMB_IP", "THUMB_TPI",
+    #                   "INDEX_MCP", "INDEX_PIP", "INDEX_DIP", "INDEX_TIP",
+    #                   "MIDDLE_MCP", "MIDDLE_PIP", "MIDDLE_DIP", "MIDDLE_TIP",
+    #                   "RING_MCP", "RING_PIP", "RING_DIP", "RING_TIP",
+    #                   "PINKY_MCP", "PINKY_PIP", "PINKY_DIP", "PINKY_TIP"]
+# "WRIST" 0-2
+# "THUMB_CMC", 3-5
+# "THUMB_MCP", 6-8
+# "THUMB_IP", 9-11
+# "THUMB_TPI", 12-14
+# "INDEX_MCP", 15-17
+# "INDEX_PIP", 18-20
+# "INDEX_DIP", 21-23
+# "INDEX_TIP", 24-26
+# "MIDDLE_MCP", 27-29
+# "MIDDLE_PIP", 30-32
+# "MIDDLE_DIP", 33-35
+# "MIDDLE_TIP", 36-38
+# "RING_MCP", 39-41
+# "RING_PIP", 42-44
+# "RING_DIP", 45-47
+# "RING_TIP", 48-50
+# "PINKY_MCP", 51-53
+# "PINKY_PIP", 54-56
+# "PINKY_DIP", 57-59
+# "PINKY_TIP" 60-62
+    with rosbag.Bag(BAG_PATH) as bag:
+        # Obtain all the images first
+        for topic, msg, t in bag.read_messages(topics=['/left_hand_skel_data', '/right_hand_skel_data']):
+            if rospy.is_shutdown():
+                break
+            joint_lists = []
+            if "left" in topic:
+                hand = left_hand
+            else:
+                hand = right_hand
+
+            hand["time"].append(msg.header.stamp)
+            for idx, joints in enumerate(msg.poses):
+                joint_lists.extend([joints.position.x,
+                                    joints.position.y,
+                                    joints.position.z])
+            hand["data"].append(joint_lists)
+    df = pd.DataFrame(left_hand["data"], index=left_hand["time"])
+    df.to_csv("hs_right.csv", header=False)
+    df = pd.DataFrame(right_hand["data"], index=right_hand["time"])
+    df.to_csv("hs_left.csv", header=False)
 
 def check_for_matching_ts():
     d = {'mp_rgb_img': [], 'left_hand_skel_data': [], 'right_hand_skel_data': [],
@@ -92,6 +148,6 @@ def check_body_tracking_data():
     finally:
         cv2.destroyAllWindows()
 
-# check_for_matching_ts()
+hs_data_to_csv()
 # check_body_tracking_data()
 # check_hand_tracking_data()
