@@ -63,8 +63,11 @@ def print_result(result: HandLandmarkerResult, output_image: mp.Image, timestamp
 
 
 options = HandLandmarkerOptions(
-    base_options=BaseOptions(model_asset_path='hand_landmarker.task'),
+    base_options=BaseOptions(model_asset_path='/home/louis/Data/Fernandez_HAR/hand_landmarker.task'),
     running_mode=VisionRunningMode.LIVE_STREAM,
+    min_hand_detection_confidence=0.1,
+    min_hand_presence_confidence=0.1,
+    min_tracking_confidence=0.1,
     num_hands=2,
     result_callback=print_result)
 
